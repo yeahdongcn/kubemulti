@@ -8,14 +8,13 @@ import (
 	"k8s.io/klog/v2"
 )
 
-func kubectl(args []string) error {
-	klog.InfoS("kubectl", "args", args)
-	out, err := exec.Command("kubectl", args...).CombinedOutput()
+func kubectl(flags []string) (string, error) {
+	klog.InfoS("kubectl", "flags", flags)
+	out, err := exec.Command("kubectl", flags...).CombinedOutput()
 	if err != nil {
-		return err
+		return "", err
 	}
-	fmt.Println(string(out))
-	return nil
+	return string(out), nil
 }
 
 func newRootCmd() *cobra.Command {
@@ -26,19 +25,19 @@ func newRootCmd() *cobra.Command {
 		Long:               "long",
 		FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(o.Namespaces) == 0 {
-				return kubectl(args)
-			} else {
-				for _, namespace := range o.Namespaces {
-					fmt.Println(namespace)
-					parameters := append(args, "-n", namespace)
-					if err := kubectl(parameters); err != nil {
-						klog.ErrorS(err, "failed to invoke kubectl")
-						continue
-					}
+			var lastKnownError error
+			for _, namespace := range o.Namespaces {
+				flags := append(args, "-n", namespace)
+				out, err := kubectl(flags)
+				if err != nil {
+					lastKnownError = err
+					klog.ErrorS(err, "failed to invoke kubectl")
+					continue
 				}
+				fmt.Println(namespace)
+				fmt.Println(out)
 			}
-			return nil
+			return lastKnownError
 		},
 	}
 	cmd.Flags().StringArrayVarP(&o.Namespaces, "namespace", "n", o.Namespaces, "xyz")
