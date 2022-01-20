@@ -1,4 +1,4 @@
-GO              := go
+GO := go
 
 all: build
 
@@ -19,5 +19,8 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	$(GO) vet ./...
 
-build: fmt vet ## Build all binaries.
+mod: ## Run go mod tidy.
+	$(GO) mod tidy
+
+build: mod fmt vet ## Build all binaries.
 	$(GO) build -o bin/kubemulti

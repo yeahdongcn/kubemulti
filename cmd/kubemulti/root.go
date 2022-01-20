@@ -5,19 +5,11 @@ import (
 	"os/exec"
 
 	"github.com/spf13/cobra"
+	"k8s.io/klog/v2"
 )
 
-type RootOptions struct {
-	Namespaces []string
-}
-
-func NewRootOption() *RootOptions {
-	return &RootOptions{
-		Namespaces: []string{},
-	}
-}
-
 func kubectl(args []string) error {
+	klog.InfoS("kubectl", "args", args)
 	out, err := exec.Command("kubectl", args...).CombinedOutput()
 	if err != nil {
 		return err
@@ -39,7 +31,9 @@ func newRootCmd() *cobra.Command {
 			} else {
 				for _, namespace := range o.Namespaces {
 					fmt.Println(namespace)
-					if err := kubectl(args); err != nil {
+					parameters := append(args, "-n", namespace)
+					if err := kubectl(parameters); err != nil {
+						klog.ErrorS(err, "failed to invoke kubectl")
 						continue
 					}
 				}
