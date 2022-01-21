@@ -13,7 +13,7 @@ import (
 )
 
 func kubectl(namespace string, flags []string) ([]metav1.TableColumnDefinition, []metav1.TableRow, error) {
-	klog.InfoS("kubectl", "flags", flags)
+	klog.InfoS("kubectl", "namespace", namespace, "flags", flags)
 
 	columns := []metav1.TableColumnDefinition{}
 	rows := []metav1.TableRow{}
@@ -23,15 +23,15 @@ func kubectl(namespace string, flags []string) ([]metav1.TableColumnDefinition, 
 		return columns, rows, err
 	}
 
-	isColumn := true
+	first := true
 
 	scanner := bufio.NewScanner(strings.NewReader(string(out)))
 	for scanner.Scan() {
 		line := scanner.Text()
 		fields := strings.Fields(line)
 
-		if isColumn {
-			isColumn = false
+		if first {
+			first = false
 			columns = append(columns, metav1.TableColumnDefinition{
 				Name: "namespace",
 				Type: "string",
@@ -57,7 +57,7 @@ func kubectl(namespace string, flags []string) ([]metav1.TableColumnDefinition, 
 func newRootCmd() *cobra.Command {
 	o := newRootOption()
 	cmd := &cobra.Command{
-		Use:                "x",
+		Use:                "kubemulti",
 		Short:              "short",
 		Long:               "long",
 		FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
@@ -70,7 +70,7 @@ func newRootCmd() *cobra.Command {
 				nsColumns, nsRows, err := kubectl(namespace, args)
 				if err != nil {
 					lastKnownError = err
-					klog.ErrorS(err, "failed to invoke kubectl")
+					klog.ErrorS(err, "failed to execute kubectl")
 					continue
 				}
 				columns = nsColumns
