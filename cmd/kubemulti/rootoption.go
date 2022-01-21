@@ -6,7 +6,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
-type RootOptions struct {
+type rootOptions struct {
 	Namespaces []string
 }
 
@@ -28,12 +28,12 @@ func getCurrentNamespace() (string, error) {
 	return ns, nil
 }
 
-func NewRootOption() *RootOptions {
+func newRootOption() *rootOptions {
 	ns, err := getCurrentNamespace()
 	if err != nil {
 		klog.ErrorS(err, "failed to get current namespace")
 	}
-	return &RootOptions{
+	return &rootOptions{
 		Namespaces: []string{ns},
 	}
 }
